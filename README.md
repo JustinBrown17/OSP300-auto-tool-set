@@ -40,16 +40,32 @@ This program is great for automating tool setting in an Okuma CNC mill - using O
             G30 P1
             RTS
 
-        -Note: M203 is mapped as single point measure in my macro page, you can replace M203 line with:
-            CALL OO30 VFST=#81H
+        -Note: M203 is mapped as single point measure in this machines macro page
+            You can replace M203 line with:
+                CALL OO30 VFST=#81H
 
-        -Also add OMTM2 to any desired macro, I use G111.
-            After macro is set, you can use this inside of a program after a tool change, so long as that tool # is in the machine, the tool will be set automatically
+            G30 P1 is also used, which is set as tool change location.
+                -You can change to XYZ moves if desired
+
+        -Add OMTM2 to any desired macro, I use G111.
+            After macro is set, you can use this inside of a program after a tool change, so long as T# is in MTM2 tool page
+
+            Can be used manually: 
+                TxxM06 
+                G111
+
+            -The tool will be set automatically
 
         -Adapt all tool numbers as you see fit, PY and RTS will vary by tool and must be calibrated for each tool
-            note: PX must be 0, unless you change OTCH (be very careful changing OTCH)
+            Note: PX must be 0, unless you change OTCH (be very careful changing OTCH)
 
-        -Turn on [block skip] to only set with single insert (multi/single set only)
-            block skip off for multi insert check
+        -This program has tool list, in later revision this may be separated from OMTM2
 
-    The offset will be set in current tool
+        -Turn on [block skip] to check all inserts of tool (multi/single set only)
+            Block skip off for single insert check
+
+
+    To use: 
+        -Call desired tool to be checked into spindle
+        -Make sure tool is setup in MTM2 program, if T# not in MTM2 program will alarm out
+        -G111, Cycle start.
