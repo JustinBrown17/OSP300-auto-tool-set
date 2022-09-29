@@ -1,0 +1,59 @@
+OINS2
+(REPLACES OISRT.LIB)
+(VERSION 2.1 - DATE: 9/29/2022 -JDB)
+(not PROVEN)
+
+    (ICUR = CURRENT INSERT VC[#] / HCUR = HEIGHT OF ICUR)
+    (INXT = NEXT INSERT VC[#] / HNXT = HEIGHT OF INXT)
+        ICUR = VC98 (starting from VC81)
+        INXT = ICUR + 1
+
+    (MOST = MOST AMOUNT OF INSERTS)
+    (LAST = LAST INSERT VC[#])
+        MOST = VC99 (from OMTM3, will overwrite)
+        LAST = [ICUR + [MOST - 1]] (account for ICUR #, which doesnt need counted)
+
+(infinite loop, until all inserts checked)
+NLOOP
+
+    (extract values from VC88 - VC95)
+    HCUR = VC[ICUR] (WAS VC1 = VC[ICUR])
+    HNXT = VC[INXT]
+
+    (if current insert > than next, skip next insert)
+    IF [HCUR GT HNXT] NEXT
+
+        (set current insert = 'highest/highest so far')
+        NDROP (discard current insert as it is not the longest!)
+            ICUR = INXT
+
+    NEXT (continue checking remaining inserts)
+        INXT = INXT + 1
+
+    (exit cycle if past 8th insert: we found the highest)
+    IF [INXT GT LAST] NEXIT
+    GOTO NLOOP
+
+    NEXIT
+        (if 2nd checked insert longer, set)
+        IF [HNXT GT HCUR] NSET2
+        (else 1st insert is longest, set)
+        GOTO NSET1
+
+
+(sets highest insert and ICUR/INXT as other variables to compare)
+    (ICUR is highest)
+    NSET1
+        VC99 = HCUR
+        GOTO NEND
+
+    (INXT highest)
+    NSET2
+        VC99 = HNXT
+
+NEND
+(VC99 = HIGHEST INSERT VALUE)
+G4 F2.
+VTOHT[[VTLCN] , 10001] = [VC99] (was VC100 -> VTLCN)
+
+RTS
