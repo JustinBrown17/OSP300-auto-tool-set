@@ -2,15 +2,17 @@ OMTM3
 (MASTER TOOLSET MULTI V3 - G111)
 (BLOCK SKIP ON FOR MULTI INSERT SETTING)
     (USES VC81-VC103)
-    (not PROVEN)
-    (VERSION 3.2 - DATE: 9/29/2022 -JDB)
+    (PROVEN)
+    (VERSION 3.2 - DATE: 9/30/2022 -JDB)
     (AFTER EDITING THIS YOU MUST RELOAD INTO MACHINE LIBRARY)
 
-(Turn ON start switch, then clear out needed variables)
-    LOW = 81 (SET START VC#, if LOW = 81 , HIGH = 99)
+(***CHANGE THESE VALUES TO DETERMINE WHAT COMMON VARIABLES ARE USED***)
+    LOW = 81 (SET START VC#, if LOW = 81 then HIGH = 99 with 16 inserts capability)
     IMAX = 16 (max insert number)
-    HIGH = LOW + IMAX + 3 (HIGH accounts for all inserts + 2 needed VC#'s for OINS2)
+    HIGH = [LOW + IMAX + 2] (HIGH accounts for all inserts + 2 needed VC#'s for OINS2)
 
+
+(Turn ON start switch, then clear out needed common variables)
     SWCH = 1
     GOTO NCLER
 
@@ -131,18 +133,18 @@ NROT (SAVE ALL Z HEIGHTS INTO VARIABLES, MAX 8 INSERTS)
 
     ROT = [ 360 / INRT ]
     
-    VAR = LOW (starting VC#)
+    TVAR = LOW (starting VC#)
     POS = PRS (variable to increment though rotations)
     CNT = 1 (start counter)
 
     NROTL (NROT loop)
         G120 PX=PX PY=PY PRS=POS
-        VC[VAR] = VTOHT [[VTLCN],10001] (INSERT HEIGHT = VC81) (was VC100 -> VTLCN)
+        VC[TVAR] = VTOHT [[VTLCN],10001] (INSERT HEIGHT = VC81)
         IF [CNT EQ INRT] NISRT
         POS = POS + ROT (increment to next rotations)
         IF [POS GT 360] NALM4 (initial rotation not the smallest)
         CNT = CNT + 1 (counter + 1)
-        VAR = VAR + 1 (saves next insert length to next VC#)
+        TVAR = TVAR + 1 (saves next insert length to next VC#)
         GOTO NROTL
 
 
@@ -182,8 +184,7 @@ SWCH = 0 (Turn OFF start switch)
 (CLEAR OUT COMMON VARIABLES)
 NCLER
     CYC = LOW (create cycle var, cycle through all VC#'s and clear out)
-    
-    (RESET VC's = 0 LOOP)
+    (RESET VC's to 0 LOOP)
     NERAS
         VC[CYC] = 0 
         IF [VC[HIGH] EQ 0] NQUIT (IF ALL VARIABLES CLEARED OUT, END LOOP)
