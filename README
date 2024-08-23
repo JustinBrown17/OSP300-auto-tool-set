@@ -1,0 +1,192 @@
+(ADD MORE INFO)
+# OSP300_auto-tool-set
+
+## Information / Usage
+
+### Usage
+
+This program is for automating tool setting in Okuma CNC mills.
+
+### Warnings
+
+- This has only been proven on an OKUMA MU6300V-L with P500 control and Renishaw tool setter - \*\* **USE AT YOUR OWN RISK** \*\*
+- I am not responsible for ANY damages or loss of any kind caused by using this program
+- You may use this program and any revisions of your own
+- Do NOT redistribute this program or any derivitaves without written permission
+
+(Previous versions have been proven on Okuma MA500HII with P300 control)
+
+## To adapt this for your machine
+
+- This will run on other mills, with minor edits.
+- For convenience: Map "OMTM5" to G111 within G/M code macro page
+- Make sure you have **all .LIB files** in the machine's **MD1 directory** (DO NOT BLEND VERSIONS)
+
+### OMTM_.LIB Edits
+
+Definitions:
+
+- PSRT = 1st VC# to have data written to
+- PMAX = Maximum number of inserts to check (will only actually check number set in "PINS" variable)
+- PEND = Calculated stop VC# (DO NOT EDIT THIS LINE)
+
+Edit these lines:
+
+``` G-Code
+(DECLARE VC#'S TO BE CLEARED + USED)
+    PSRT = 1 (SET START VC#)
+    PMAX = 16 (MAX NUMBER OF INSERTS)
+    PEND = [PSRT + PMAX - 1] (CALCULATE STOP VC#)
+```
+
+### OTDAT.LIB Edits
+
+Follow instructions in program.
+
+- PX, RTS, PINS will vary by tool and must be calibrated for each tool
+- Note: **PY must be 0**
+
+For horizontal mills:
+
+- Will most likely want PX=0 instead of PY=0
+- You will also have to change the logic to OTCH, you can use V3 as an example on the ALARMS (be *very careful* changing OTCH)
+
+## To Use (After edits completed)
+
+- Make sure tool is setup with correct PX, PY, RTS and INRT within TOOL LIBRARY in MTM3 program
+
+- ADD OMTM to any desired macro macros into G/M code macro page. I use G111.
+
+### Single insert set
+
+>Sets length of single insert or tip of tool in spindle (HA length)
+
+Usage:
+
+- No modifiers needed
+
+```G-Code
+G111
+```
+
+### Multi insert set
+
+>Gets length on all inserts of tool in spindle and sets highest as HA length
+
+Usage:
+
+- Use multiset modifier: PMLT=1
+
+```G-Code
+G111 PMLT=1 
+```
+
+### Break Detection
+
+>Checks insert is within specific range, if not alarms out
+
+Specify Range in "OTCH.LIB":
+
+``` G-Code
+OTCH
+
+    NBRK (BREAK DETECT)
+      M144
+      VFST=#80H (BREAK)
+      CALL OO30 PLE1=2.000 PX=PX PRS=PRS PGO=1 (2mm range)
+      M145
+      GOTO NEND
+
+```
+
+Usage:
+
+- Use modifier: PBRK=1
+
+``` G-Code
+G111 PBRK=1
+```
+
+### Manual operation
+
+> MDI
+
+``` G-Code
+T1 M06 (call desired tool to be checked)
+G111 (use desired modifier if needed)
+```
+
+### Auto operation
+
+- Add "G111" after tool change within program (Add multiset modifier if desired)
+- Add "G111 PBRK=1" after toolpath to check breakage
+
+## CNC Important Information
+
+Tested controls / Machines:
+
+- OSP500 - MU6300V-L
+- OSP300 (V1-V3) - MA500HII
+- P500 and P300 are very similar controls, I left local variables to a max of "4" characters for backwards compatiblity
+
+## Previous Version Information / History
+
+### V4 (Current)
+
+- Revision Date: 07/29/2024
+- Proven: OSP P500 MU6300V-L
+- Capacity: Unlimited (16 Tested)
+- Hard Programmed VC#'s: None
+- Parametric Programmed VC#'s: VC1 - VC16
+- Version Comment:
+  - Revised to eliminate all hard coded VC#'s
+  - Increased readability
+  - Add seperate VC clear program
+  - Eliminate unnecessary custom macros (G120)
+  - Seperate tool page program for operator editting and program robustness, with simple instructions
+
+### V3
+
+- Revision Date: 09/30/2022
+- Proven: OSP P300 MA500HII
+- Capacity: 16 inserts MAX (due to passing variables)
+- Hard Programmed VC#'s: VC98, VC99
+- Parametric Programmed VC#'s: VC81 (LOW), VC99 (LOW + IMAX)
+- Version Comment:
+  - Updated OMTM#.LIB to contain parametric design
+  - Now can choose VC#'s with LOW and IMAX local variables
+  - All variables used = LOW - (LOW + IMAX + 2)
+  - Still VC98 and VC99 are hard programmed in OINS2.LIB
+  - Refer to **README_V3.md** for full description
+
+### V2
+
+- Revision Date: 09/29/2022
+- Proven: OSP300 MA500HII
+- Capacity: 8 inserts MAX - not scalable for more inserts
+- Hard Programmed VC#'s: VC81-VC88, VC99, VC100, VC103
+- Version Comment:
+  - Updated OINS2 program for readablility and parametric programming
+
+### V1
+
+- Revision Date: 05/04/2022
+- Proven: OSP300 MA500HII
+- Capacity: 8 Insert MAX - not scalable for more inserts
+- Hard Programmed VC#'s: VC81-VC90, VC99, VC100
+- Version Comment: Original version
+
+#### Additional macros involved in OMTM3/OMTM2
+
+- M203 = single point measure
+  -Replace M203 line (in OMTM3), if desired, with: CALL OO30 VFST=#81H
+
+- G30 P1 = safe tool change rapid positioning.
+  -Pxx are set within HOME POSITIONS page, can also add order to always retract Z first
+  -\*\* *recommend not changing postions or orders that are set* \*\*
+  -Change to XYZ moves if desired
+
+## New features to implement
+
+- Add operator warn, if VC#'s have data besides EMPTY before clearing
+- Delete M1 and replace with dwell so operator doesn't need to hit cycle start
